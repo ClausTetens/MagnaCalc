@@ -1,0 +1,5 @@
+﻿  MagnaCalc.cpp
+c:\users\claus\documents\visual studio 2017\projects\magnacalc\magnacalc.cpp(116): warning C4101: 'acc': unreferenced local variable
+c:\users\claus\documents\visual studio 2017\projects\magnacalc\magnacalc.cpp(150): warning C4244: '=': conversion from 'UINT64' to 'UINT32', possible loss of data
+c:\users\claus\documents\visual studio 2017\projects\magnacalc\magnacalc.cpp(300): warning C4101: 'c': unreferenced local variable
+  MagnaCalc.vcxproj -> C:\Users\Claus\Documents\Visual Studio 2017\Projects\MagnaCalc\Debug\MagnaCalc.exe
