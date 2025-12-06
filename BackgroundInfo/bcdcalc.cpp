@@ -1438,7 +1438,7 @@ void BCD::SinCos(BCD & s, BCD & c)
     	rest=rest-BCD_pi4;
     }
 
-    // Reduce angle usign CORDIC
+    // Reduce angle using CORDIC
     for(i=0; i<100; i++)
     {	while(rest >= BCD_atan[i])
     	{	rest=rest-BCD_atan[i];

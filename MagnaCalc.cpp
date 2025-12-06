@@ -9,7 +9,7 @@
 #define BITS_PR_BYTE 8
 #define UINT32_BITS 32
 #define MSB_MASK 0x80000000U
-#define MANTISSE_BITS 64
+#define MANTISSE_BITS 128
 #define MANTISSE_UINT32_BLOCKS (MANTISSE_BITS/UINT32_BITS)
 
 #define MESSAGELENGTH 137
@@ -22,7 +22,7 @@ public:
 	}
 };
 
-enum FloatInfo { Normalized, Zero, Denormalized, Infinite, NaN };
+enum FloatInfo { FP_NORMALIZED, FP_ZERO, FP_DEMORMALIZED, FP_INFINITE, FP_NAN };
 
 class RatherLongFloat {
 private:
@@ -31,8 +31,18 @@ private:
 	__int8 signum;
 	FloatInfo meta;
 
+	UINT32 tempMantisse[38];
+
 	int msb(UINT32 * a) {
 		return(*a & MSB_MASK) ? 1 : 0;
+	}
+
+	void setMsb(UINT32 * a) {
+		*a |= MSB_MASK;
+	}	
+
+	void resetMsb(UINT32 * a) {
+		*a &= ~MSB_MASK;
 	}
 
 	bool isAllZero(UINT32 * a, int length) {
@@ -77,7 +87,7 @@ private:
 
 	bool normalize(UINT32 * a, int length, int & expo, FloatInfo & meta) {
 		if(isAllZero(a, length)) {
-			meta = Zero;
+			meta = FP_ZERO;
 			return true;
 		}
 		// lsh is able to cope with this - just make cnt reflect the amount of UINT32_BITS units
@@ -96,7 +106,37 @@ private:
 		}
 		lsh(a, length, cnt);
 		expo -= cnt;
+
+		return true;	// but why not return void?
 	}
+
+	// number is normalized when entering this function - MSB in nextA is the first bit to be rounded away
+	void round(UINT32* a, int length, int& expo, FloatInfo& meta, UINT32 nextA) {
+		if (msb(&nextA)) {
+			// need to add one to a
+			UINT32 carry = 1;
+			for(int i = length - 1; i >= 0 && carry; i--) {
+				UINT64 acc = (UINT64)a[i] + (UINT64)carry;
+				a[i] = (UINT32)acc;
+				carry = (UINT32)(acc >> UINT32_BITS);
+			}
+			if(carry) {
+				/*
+				// overflowed - need to rsh
+				UINT32 temp = rsh(a, length, 1); 
+				expo += 1;
+				if(temp != 0) {
+					// should not happen - means we lost bits
+					meta = Infinite;
+				} */
+				// if overflowed by adding 1, then all bits were 1 - now all bits must be 0 except MSB
+				//binSetZero(a, length); - bits are already zeroed
+				expo += 1;
+				setMsb(a);
+			}
+		}
+	}
+
 
 	void divInt(UINT32 * quotient, int quotientLength, UINT32 * remainder, int remainderLength, UINT32 * a, int aLength, UINT32 * b, int bLength) {
 		int tempLength = quotientLength + remainderLength;
@@ -105,6 +145,8 @@ private:
 
 	}
 
+
+	/* potentially faster version using fewer additions - yet to be constructed
 	void mulIntII(UINT32* result, int resultLength, UINT32* a, int aLength, UINT32* b, int bLength) {
 		if(resultLength < aLength + bLength || aLength < 1 || bLength < 1) {
 			WCHAR msg[MESSAGELENGTH];
@@ -116,6 +158,7 @@ private:
 		UINT64 acc;
 
 	}
+	*/
 
 
 	void mulInt(UINT32 * result, int resultLength, UINT32 * a, int aLength, UINT32 * b, int bLength) {
@@ -262,6 +305,26 @@ private:
 		// == 12 * arctan(1/18) + 8 * arctan(1/57) - 5 * arctan(1/239)
 	}
 
+
+	/*	
+	sin(x) = x - x^3/3! + x^5/5! - x^7/7! + ...
+	cos(x) = 1 - x^2/2! + x^4/4! - x^6/6! + ...
+	tan(x) = sin(x)/cos(x)
+	atan(x) = x - x^3/3 + x^5/5 - x^7/7 + ...
+	exp(x) = 1 + x/1! + x^2/2! + x^3/3! + ...
+	ln(1+x) = x - x^2/2 + x^3/3 - x^4/4 + ...
+
+	//sin(x) = -sin(-x) = -sin(x-PI) = sin(x + 2kPI) = sin(x mod 2PI) = sin(x mod PI)
+	sin(x) = -sin(-x) = sin(x mod 2PI) = -sin(x-PI) = sin(PI - x) | apply first for negative x; second for x > 2PI; third for x ]PI, 2PI]; fourth for x > PI/2
+	cos(x) = sin(x + PI/2)
+
+
+	sin(x) = -sin(x-pi) = sin(pi-x) = cos(pi/2-x)
+			x>pi        x>pi/2      x>pi/4
+	Reducér x til [0;pi/4] og beregn Taylor sin hhv cos
+
+*/
+
 	/*
 	void decToAscii(BYTE * dec, int decLength) {
 		while(decLength--) {
@@ -283,7 +346,7 @@ public:
 		mantisse = new UINT32[MANTISSE_UINT32_BLOCKS];
 		exponent = 0;
 		signum = 0;
-		meta = Zero;
+		meta = FP_ZERO;
 	}
 
 	~RatherLongFloat() {
