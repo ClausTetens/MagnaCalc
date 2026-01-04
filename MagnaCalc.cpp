@@ -450,6 +450,14 @@ private:
 		//https://www.ndl.go.jp/math/e/s1/c4_2.html
 		//https://members.loria.fr/PZimmermann/talks/gauss.pdf
 		// == 12 * arctan(1/18) + 8 * arctan(1/57) - 5 * arctan(1/239)
+
+
+		//https://datascienceparichay.com/super-computing/pi-current/
+		//pi = 48 arc tan(1 / 49) + 128 arc tan(1 / 57) – 20 arc tan(1 / 239) + 48 arc tan(1 / 110443)
+		//pi = 176 arc tan(1 / 57) + 28 arc tan(1 / 239) – 48 arc tan(1 / 682) + 96 arc tan(1 / 12943)
+
+		// PI 10.000 digits in file PI10.000.h
+		//https://www.exeter.ac.uk/v8media/facultysites/ese/physics/pi4.txt
 	}
 
 
@@ -471,6 +479,11 @@ private:
 
 		cos(a-b) = cos(a)cos(b) + sin(a)sin(b); cos(PI/2) = 0; sin(PI/2) = 1; ==> cos(PI/2 - x) = sin(x)
 
+	*/
+
+
+	/*
+		Binary to decimal conversion	https://www.researchgate.net/publication/329410883_Ryu_fast_float-to-string_conversion
 	*/
 
 	/*
